@@ -18,7 +18,7 @@ void setup() {
   size(200, 200);
 
   // Starts a myServer on port 5204
-  myServer = new Server(this, 1234); 
+  myServer = new Server(this, 8088); 
 
 
 }

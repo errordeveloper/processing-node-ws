@@ -4,13 +4,13 @@
 <META HTTP-EQUIV="Expires" CONTENT="-1"> -->
     <script type="text/javascript">
     <!--
-      var ws = new WebSocket("ws://localhost:8088");
-      
+      var ws = new WebSocket("ws://localhost:8887");
+
       ws.onopen = function() {
         alert("CONNECTIIIONNN");
         //ws.send( {'test': 'message'} );
         ws.send("a long string");
-        
+
         window.ondevicemotion = function(event) {
             var x = event.accelerationIncludingGravity.x;
             var y = event.accelerationIncludingGravity.y;
@@ -18,15 +18,15 @@
             ws.send("x:" + x + ":y:" + y + ":z:" + z);
         };
       };
-      
+
       ws.onclose = function(evt) {
        alert("closed con");
       };
-      
+
       ws.onerror = function(evt) {
         alert("error error");
       };
-      
+
       ws.onmessage = function(evt) {
         alert("got a message" + evt.data);
       };
