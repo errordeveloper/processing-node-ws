@@ -1,8 +1,10 @@
+<!DOCTYPE html>
 <head>
-    <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-<META HTTP-EQUIV="Expires" CONTENT="-1">
-    <script>
-      var ws = new WebSocket("ws://192.168.0.104:1234");
+<!-- <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="Expires" CONTENT="-1"> -->
+    <script type="text/javascript">
+    <!--
+      var ws = new WebSocket("ws://localhost:8088");
       
       ws.onopen = function() {
         alert("CONNECTIIIONNN");
@@ -28,10 +30,9 @@
       ws.onmessage = function(evt) {
         alert("got a message" + evt.data);
       };
-    
+    -->
     </script>
 </head>
-
 
 <body>
 </body>
