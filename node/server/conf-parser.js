@@ -12,35 +12,47 @@ var sketch_skel = {
   libraries: [1,2,3],
   head: "<html><head></head>",
   body: "<body>",
-  tail: "</body></html>"
+  tail: "</body></html>",
+  func: function() { do_something(); }
 }; // TODO: make it enumerable!
+
 
 console.log('=> sketch_skel:\n'+sys.inspect(sketch_skel));
 
 var sketch_conf = {};
 
 function check(conf, skel, log, use) {
-  if(skel.constructor === conf.constructor) {
-    console.log(log + ' is OK.');
-    use(conf);
+  if(conf) { // if(typeof(conf) === typeof(skel)
+    if (conf.constructor === skel.constructor) {
+      console.log(log + ' is OK.');
+      use(conf);
+    } else {
+      console.log(log + ' is wrong type!\n\t'
+         +' I expected '
+         + skel.constructor.name + ','
+         +' but encoutered '
+         + conf.constructor.name + '!\n\t'
+         +' Applying default setting.');
+      use(skel);
+    }
   } else {
-    console.log(log + ' is wrong type!'
-       +' I expected '
-       + skel.constructor.name + ','
-       +' but encoutered '
-       + conf.constructor.name + '!');
+    console.log(log + ' is undefined!\n\t'
+       +' Applying default setting.');
     use(skel);
   }
 }
 
 function parse(conf, skel) {
 
-  var list = [ 'head', 'libraries', 'body', 'tail' ];
+  //var list = [ 'head', 'libraries', 'body', 'tail' ];
 
-  list.forEach(function(e) {
-    check(conf[e], skel[e], 'Checking setting ['+e+']',
+  for(e in sketch_skel) {
+    //console.log('sketch_skel['+e+'] = ' + sketch_skel[e] + ' (' +typeof(sketch_skel[e])+')');
+    //console.log('config_data['+e+'] = ' + config_data[e] + ' (' +typeof(config_data[e])+')');
+  //list.forEach(function(e) {
+    check(conf[e], skel[e], 'Checking field ['+e+']',
        function(use){ sketch_conf[e] = use; });
-  });
+  }//);
 }
 
 parse(config_data, sketch_skel);
