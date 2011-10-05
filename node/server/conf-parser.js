@@ -14,7 +14,7 @@ var sketch_skel = {
   body: "<body>",
   tail: "</body></html>",
   func: function() { do_something(); }
-}; // TODO: make it enumerable!
+};
 
 
 console.log('=> sketch_skel:\n'+sys.inspect(sketch_skel));
@@ -44,15 +44,12 @@ function check(conf, skel, log, use) {
 
 function parse(conf, skel) {
 
-  //var list = [ 'head', 'libraries', 'body', 'tail' ];
-
   for(e in sketch_skel) {
     //console.log('sketch_skel['+e+'] = ' + sketch_skel[e] + ' (' +typeof(sketch_skel[e])+')');
     //console.log('config_data['+e+'] = ' + config_data[e] + ' (' +typeof(config_data[e])+')');
-  //list.forEach(function(e) {
     check(conf[e], skel[e], 'Checking field ['+e+']',
        function(use){ sketch_conf[e] = use; });
-  }//);
+  }
 }
 
 parse(config_data, sketch_skel);
