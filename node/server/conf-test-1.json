@@ -2,5 +2,5 @@
   "libraries": [1,2,3],
   "head": "<html><head></head>",
   "body": 1,
-  "tail": "</body></html>"
+  "tail": {"</body></html>": "src=test.js"}
 }

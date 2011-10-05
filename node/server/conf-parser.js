@@ -1,51 +1,51 @@
 var sys = require('sys'),
-    ass = require('assert'),
     fs = require('fs');
 
 var config_file = process.argv[2];
 
 var config_data = JSON.parse(fs.readFileSync(config_file));
 
-sys.puts('new ='+sys.inspect(config_data));
-
+sys.puts('=> config_data:\n'+sys.inspect(config_data));
 
 // This is the object prototype:
-var default_obj = {
+var sketch_skel = {
   libraries: [1,2,3],
   head: "<html><head></head>",
   body: "<body>",
   tail: "</body></html>"
 }; // TODO: make it enumerable!
 
-var _obj_ = {};
+sys.puts('=> sketch_skel:\n'+sys.inspect(sketch_skel));
 
-function checkEntryType(_new_, _def_, _log_, _set_) {
-  //console.log(sys.inspect(arguments));
-  if(_def_.constructor === _new_.constructor) {
-    console.log(_log_+' is OK.');
-    _set_(_new_);
+var sketch_conf = {};
+
+function check(conf, skel, log, use) {
+  if(skel.constructor === conf.constructor) {
+    console.log(log + ' is OK.');
+    use(conf);
   } else {
-    // Should I call name.toLowerCase() ?
-    console.log(_log_+' is wrong type!'
-       +'\nShould had been '+_def_.constructor.name
-       +' but I found '+_new_.constructor.name+'!');
-    _set_(_def_);
+    console.log(log + ' is wrong type!'
+       +' I expected '
+       + skel.constructor.name + ','
+       +' but encoutered '
+       + conf.constructor.name + '!');
+    use(skel);
   }
 }
 
-function parseConfig(_new_, _def_) {
+function parse(conf, skel) {
 
   var list = [ 'head', 'libraries', 'body', 'tail' ];
 
   list.forEach(function(e) {
-    checkEntryType(_new_[e], _def_[e], 'Checking entry \"'+e+'\"',
-      function(_set_){ _obj_[e] = _set_; });
+    check(conf[e], skel[e], 'Checking setting ['+e+']',
+       function(use){ sketch_conf[e] = use; });
   });
 }
 
-parseConfig(config_data, default_obj);
-sys.puts('use ='+sys.inspect(_obj_));
+parse(config_data, sketch_skel);
+sys.puts('=> sketch_conf:\n'+sys.inspect(sketch_conf));
 
-if ( 'test' in config_data ) {
+if (! 'test' in config_data ) {
   console.log("If it was a book, I'd call it \"OMG, Test Failed!\"");
 }
