@@ -5,7 +5,7 @@ var config_file = process.argv[2];
 
 var config_data = JSON.parse(fs.readFileSync(config_file));
 
-sys.puts('=> config_data:\n'+sys.inspect(config_data));
+console.log('=> config_data:\n'+sys.inspect(config_data));
 
 // This is the object prototype:
 var sketch_skel = {
@@ -15,7 +15,7 @@ var sketch_skel = {
   tail: "</body></html>"
 }; // TODO: make it enumerable!
 
-sys.puts('=> sketch_skel:\n'+sys.inspect(sketch_skel));
+console.log('=> sketch_skel:\n'+sys.inspect(sketch_skel));
 
 var sketch_conf = {};
 
@@ -44,7 +44,7 @@ function parse(conf, skel) {
 }
 
 parse(config_data, sketch_skel);
-sys.puts('=> sketch_conf:\n'+sys.inspect(sketch_conf));
+console.log('=> sketch_conf:\n'+sys.inspect(sketch_conf));
 
 if (! 'test' in config_data ) {
   console.log("If it was a book, I'd call it \"OMG, Test Failed!\"");
