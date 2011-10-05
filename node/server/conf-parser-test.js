@@ -1,6 +1,7 @@
 var sys = require('sys'),
     par = require('./conf-parser.js');
 
+// This is the object prototype:
 var sketch_skel = {
   libraries: [1,2,3],
   head: "<html><head></head>",
