@@ -24,15 +24,15 @@ config_file = process.argv[2];
 
 par.parse(par.input(config_file), sketch_skel,
     function(x){
-      console.error('=> parser.parse:\n'
+      console.error('=> test.parse:\n'
         + sys.inspect(x));
     });
 
-console.error('=> parser.usual:\n'
+console.error('=> test.usual:\n'
     + sys.inspect(par.usual(config_file, sketch_skel)));
 
 par.async(config_file, sketch_skel,
     function(x){
-      console.error('=> parser.async:\n'
+      console.error('=> test.async:\n'
         + sys.inspect(x));
     });

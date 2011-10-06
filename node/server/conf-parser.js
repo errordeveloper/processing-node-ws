@@ -15,25 +15,32 @@ exports.input = function (config_file) {
 exports.check = function (conf, skel, log, use) {
   if(conf) { // if(typeof(conf) === typeof(skel)
     if (conf.constructor === skel.constructor) {
-      console.log(log + ' is OK.');
+      // TODO: parsing nested objects
+      var test = '';
+      if ( conf instanceof Object &&
+           skel instanceof Object )
+           test += "\t-> needs recusive check!";
+      //console.log(log + ' is OK.' + test);
       use(conf);
     } else {
+      /*
       console.log(log + ' is wrong type!\n\t'
          +' I expected '
          + skel.constructor.name + ','
          +' but encoutered '
          + conf.constructor.name + '!\n\t'
          +' Applying default setting.');
+         */
       use(skel);
     }
   } else {
+    /*
     console.log(log + ' is undefined!\n\t'
-       +' Applying default setting.');
+       +' Applying default setting.');*/
     use(skel);
   }
 }
 
-// TODO: parsing nested objects
 exports.parse = function (conf, skel, call) {
 
   var sketch_conf = {};
@@ -42,7 +49,7 @@ exports.parse = function (conf, skel, call) {
   //console.log('=> sketch_skel:\n'+sys.inspect(skel));
   for(e in skel) {
     //console.log('skel['+e+'] = '+skel[e]+' ('+typeof(skel[e])+')');
-    //console.log('data['+e+'] = '+data[e]+' ('+typeof(data[e])+')');
+    //console.log('conf['+e+'] = '+conf[e]+' ('+typeof(conf[e])+')');
     this.check(conf[e], skel[e], 'Checking field ['+e+']',
        function(use){ sketch_conf[e] = use; });
   }

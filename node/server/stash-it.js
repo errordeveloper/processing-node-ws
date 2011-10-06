@@ -1,13 +1,9 @@
-// TODO: add capability to
-//       * compile Java library code
 
 var http = require('http');
 var sys = require('sys');
 var fs = require('fs');
 
 var par = require('./conf-parser.js');
-
-var dom = require("jsdom").jsdom;
 
 var opt = require('optimist')
 
@@ -20,6 +16,7 @@ var opt = require('optimist')
       { describe: 'path to the sketch file to serve',
         alias: [ 'f', 'file' ],
         demand: true })
+
 
   .options('config_file',
       { describe: 'JSON config file for this sketch',
@@ -80,24 +77,20 @@ var sketch_skel = {
                + '  var pjs = Processing.getInstanceById(id);'
                + '  var text = document.getElementById(\'inputtext\').value;'
                + '  pjs.drawText(text);'
-               + '}\n-->\n</script>'
-               ,
+               + '}\n-->\n</script>',
 
   /* The canvas_name will need to be hardcoded also in here ;(*/
   ammend_body : '<input type=\"textfield\" id=\"inputtext\"/>'
                + '<button onclick=\"drawSomeText(\''+opt.canvas_name+'\')\"/>'
 
-}; /* END OF PROTOTYPE OBJECT */
+} /* END OF PROTOTYPE OBJECT */
 
-var head = '',
-    tail = '',
-    fake = '';
-
-var script = '';
+var head = new String(),
+    tail = new String();
 
 var pjs_library = 'http://processingjs.org/content/download/'
                 + 'processing-js-'+opt.pjs_version
-                + '/processing-'+opt.pjs_version+'.js';
+                + '/processing-'+opt.pjs_version+'.js'
 
 var pjs_include = '<script type=\"text/javascript\"'
                 + 'src=\"'+pjs_library+'\"></script>';
@@ -123,22 +116,8 @@ if (opt.toxiclib) {
 
 sys.puts(sys.inspect(opt));
 
-function Server() {
 
-  http.createServer(function (request, response) {
-
-    console.log('Serving request ...');
-    while ( script === '' ) { /* FIXME! */ }
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    response.write(head, 'utf-8');
-    //console.log(sys.inspect(script));
-    response.write(script, 'utf-8');
-    response.end(tail, 'utf-8');
-
-  }).listen(opt.server_port);
-}
-
-function Config(conf, CallMe) {
+function Config(conf) {
 
   sys.puts(("conf = " + sys.inspect(conf)));
 
@@ -175,22 +154,22 @@ function Config(conf, CallMe) {
        ;
 
 
-  fake = head + sketch_head + tail;
-  head += script_head;
+  var fake = head + sketch_head + tail,
+      head = head + script_head;
 
   sys.puts(("head = \n" + head));
   sys.puts(("tail = \n" + tail));
 
-  CallMe();
-
 }
 
+par.async(opt.config_file, sketch_skel, Config);
 
-function Master() {
-  Cacher(fs.readFileSync(opt.sketch_file, 'utf8'));
-  fs.watchFile(opt.sketch_file, { persistent: true, interval: 50 }, Reload);
-  par.async(opt.config_file, sketch_skel, Config);
-}
+// TODO: add capability to
+//       * compile Java library code
+
+var dom = require("jsdom").jsdom;
+
+var script = '';
 
 function Cacher(sketch_body) {
   dom.env(fake, [pjs_library], function (dom_err, window) {
@@ -208,10 +187,11 @@ function Cacher(sketch_body) {
   });
 }
 
+Cacher(fs.readFileSync(opt.sketch_file, 'utf8'));
 
 sys.puts(script);
 
-function Reload(curr, prev) {
+fs.watchFile(opt.sketch_file, { persistent: true, interval: 50 }, function (curr, prev) {
   //console.log('the current mtime is: ' + curr.mtime);
   //console.log(sys.inspect(curr));
   //console.log('the previous mtime was: ' + prev.mtime);
@@ -227,7 +207,18 @@ function Reload(curr, prev) {
       }
     });
   }
-}
+});
 
+http.createServer(function (request, response) {
+
+  console.log('request starting...');
+  while ( script === '' ) { // FIXME! // }
+  response.writeHead(200, { 'Content-Type': 'text/html' });
+  response.write(head, 'utf-8');
+  //console.log(sys.inspect(script));
+  response.write(script, 'utf-8');
+  response.end(tail, 'utf-8');
+
+}).listen(opt.server_port);
 
 console.log('Server running at http://127.0.0.1:' + opt.server_port);
