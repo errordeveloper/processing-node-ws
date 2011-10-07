@@ -1,17 +1,15 @@
-// TODO: add capability to
-//       * compile Java library code
+var HTTP = require ('http'),
+    DOM = require ('jsdom'),
+    FS = require ('fs'),
+    EV = require ('events');
 
-var http = require('http');
-var sys = require('sys');
-var fs = require('fs');
-var ev = require('events');
+var System = require ('sys');
 
-var par = require('./conf-parser.js');
+var Parser = require ('./conf-parser.js');
 
-var dom = require('jsdom').jsdom;
+var Events = new EV.EventEmitter();
 
-var opt = require('optimist')
-
+var opts = require ('optimist')
 
   .options('server_port',
       { describe: 'port number to listen on',
@@ -44,10 +42,8 @@ var opt = require('optimist')
   .usage('Usage: $0')
   .argv;
 
-//var pjs_library = '/opt/devel/src/work/node.git/import/processing/processing.js';
-
-// This is the object prototype:
-var sketch_skel = {
+/* BEGIN GLOBALS */
+var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
 
   /* TODO: These are Processing Java libraries! */
   sketch_libs: [],
@@ -64,7 +60,7 @@ var sketch_skel = {
 
   /* Will be hardcode anyway, just have canvas_name here!
   sketch_head : '<script type=\"application/processing\" '
-                  + 'data-processing-target=\"'+opt.canvas_name+'\">\n\n',
+                  + 'data-processing-target=\"'+opts.canvas_name+'\">\n\n',
                   */
 
   canvas_name : 'myNewCanvas',
@@ -87,70 +83,29 @@ var sketch_skel = {
 
   /* The canvas_name will need to be hardcoded also in here ;(*/
   ammend_body : '<input type=\"textfield\" id=\"inputtext\"/>'
-               + '<button onclick=\"drawSomeText(\''+opt.canvas_name+'\')\"/>'
+               + '<button onclick=\"drawSomeText(\''+opts.canvas_name+'\')\"/>'
 
 }; /* END OF PROTOTYPE OBJECT */
 
 var head = '', tail = '', fake = '';
 
-var script = '';
+// var script = '';
 
 var pjs_library = 'http://processingjs.org/content/download/'
-                + 'processing-js-'+opt.pjs_version
-                + '/processing-'+opt.pjs_version+'.js';
+                + 'processing-js-'+opts.pjs_version
+                + '/processing-'+opts.pjs_version+'.js';
 
 var pjs_include = '<script type=\"text/javascript\"'
                 + 'src=\"'+pjs_library+'\"></script>';
 
-/*
-if (opt.jssource) {
-  lib_include += '<script type=\"text/javascript\" src=\"'
-              +  opt.jslibfile
-              +  '\"></script>';
-}
-
-if (opt.toxiclib) {
-  lib_include += '<script type=\"text/javascript\" src=\"'
-              +  'http://haptic-data.com/toxiclibsjs/build/toxiclibs.js'
-              +  '\"></script>';
-}
-*/
-
-// TODO: if we get a JSON config for these things, then it
-//       should probably point to separate files really :)
-//       OR we can use ejs templates or something similar!
-//       there would be default head/tail template vars etc.
-
-
-var emitter = new ev.EventEmitter();
-
-emitter.on('loadedSketch', Cacher);
-emitter.on('reloadSketch', Cacher);
-emitter.on('loadedConfig', Server);
-
-sys.puts(sys.inspect(opt));
-
-function Server() {
-
-  http.createServer(function (request, response) {
-
-    console.log('Serving request ...');
-    //while ( script === '' ) { /* FIXME! */ }
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    response.write(head, 'utf-8');
-    //console.log(sys.inspect(script));
-    response.write(script, 'utf-8');
-    response.end(tail, 'utf-8');
-
-  }).listen(opt.server_port);
-}
+/* END GLOBALS */
 
 function Config(conf) {
 
-  sys.puts(("conf = " + sys.inspect(conf)));
+  System.puts(("conf = " + System.inspect(conf)));
 
-  var canvas_name = opt.canvas_name || conf.canvas_name,
-      sketch_name = opt.sketch_name || conf.sketch_name;
+  var canvas_name = opts.canvas_name || conf.canvas_name,
+      sketch_name = opts.sketch_name || conf.sketch_name;
 
   var sketch_head = '<script type=\"application/processing\" '
                   + 'data-processing-target=\"'+canvas_name+'\">\n\n';
@@ -185,52 +140,64 @@ function Config(conf) {
   fake = head + sketch_head + tail;
   head += script_head;
 
-  sys.puts(("head = \n" + head));
-  sys.puts(("tail = \n" + tail));
+  Events.emit('loadedConfig', {head: head, tail: tail});
 
-}
+} /* Config */
 
-
-function Master() {
-  par.async(opt.config_file, sketch_skel, Config);
-}
+var sketch_stat = ''; // It's the easies way, but I don't see other way!
 
 function Cacher(sketch_body) {
-  dom.env(fake, [pjs_library], function (dom_err, window) {
+  System.puts(arguments.callee.name + ' has been called!')
+  DOM.env(fake, [pjs_library], function (dom_err, window) {
     if ( dom_err ) {
-      console.error("jsdom_err:\n" + sys.inspect(dom_err));
+      console.error("jsdom_err:\n" + System.inspect(dom_err));
       throw _err;
     } else {
       // This is probably quicker this way, never mind we are in the
       // context already .. alternatives should be tested sometime :)
       script = window.Processing.compile(String(sketch_body)).sourceCode;
       var splice = script.split('\n');
-      script = 'var '+opt.sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
-      sys.puts(script);
+      script = 'var '+opts.sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
+      System.puts(script);
+      Events.emit('parsedSketch');
     }
   });
 }
 
-
-sys.puts(script);
-
 function Reader() {
-
-  if ( curr.mtime !== prev.mtime ) {
-    console.log('Will re-read `' + opt.sketch_file + '`');
-    fs.readFile(opt.sketch_file, 'utf8', function (fs_err, sketch_body) {
-      if ( fs_err ) {
-        console.log('Error reading `' + opt.sketch_file + '`');
-        throw fs_err;
-      } else {
-        fs.watchFile(opt.sketch_file,
-          { persistent: true, interval: 50 },
-          function () {});
-
-        Cacher(sketch_body);
+  System.puts(arguments.callee.name + ' has been called!')
+  FS.readFile(opts.sketch_file, 'utf8', function (fs_err, sketch_body) {
+    if ( fs_err ) {
+      console.log('Error reading `' + opts.sketch_file + '`');
+      throw fs_err;
+    } else {
+      if ( sketch_stat.constructor.name !== 'StatWatcher' ) {
+        //System.puts('This has to be done only once!');
+        sketch_stat = FS.watchFile(opts.sketch_file,
+        { persistent: true, interval: 50 },
+        function (curr, prev) {
+          curr.mtime === prev.mtime || Reader();
+          });
       }
-    });
-  }
+
+      Cacher(sketch_body);
+    }
+  });
 }
 
-//console.log('Server running at http://127.0.0.1:' + opt.server_port);
+/* BEGIN EVENT HANDLERS */
+Events.on('parsedSketch', function () {
+  console.log('Sketch parsed!');
+  });
+
+
+Events.on('loadedConfig', function (struct) {
+  console.log(("head = \n" + struct.head));
+  console.log(("tail = \n" + struct.tail));
+  });
+
+/* END EVENT HANDLERS */
+
+Config(sketch_skel); // This will take the input from Parser!
+
+Reader();
