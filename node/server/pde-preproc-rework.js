@@ -98,11 +98,15 @@ var pjs_library = 'http://processingjs.org/content/download/'
 var pjs_include = '<script type=\"text/javascript\"'
                 + 'src=\"'+pjs_library+'\"></script>';
 
+var sketch_stat = ''; // It's the easies way, but I don't see other way!
+
 /* END GLOBALS */
+
+/* BEGIN FUNCTIONS */
 
 function Config(conf) {
 
-  System.puts(("conf = " + System.inspect(conf)));
+  System.debug(("conf = " + System.inspect(conf)));
 
   var canvas_name = opts.canvas_name || conf.canvas_name,
       sketch_name = opts.sketch_name || conf.sketch_name;
@@ -144,10 +148,9 @@ function Config(conf) {
 
 } /* Config */
 
-var sketch_stat = ''; // It's the easies way, but I don't see other way!
 
 function Cacher(sketch_body) {
-  System.puts(arguments.callee.name + ' has been called!')
+  System.debug(arguments.callee.name + ' has been called!')
   DOM.env(fake, [pjs_library], function (dom_err, window) {
     if ( dom_err ) {
       console.error("jsdom_err:\n" + System.inspect(dom_err));
@@ -158,25 +161,29 @@ function Cacher(sketch_body) {
       script = window.Processing.compile(String(sketch_body)).sourceCode;
       var splice = script.split('\n');
       script = 'var '+opts.sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
-      System.puts(script);
+      System.debug(script);
       Events.emit('parsedSketch');
     }
   });
 }
 
 function Reader() {
-  System.puts(arguments.callee.name + ' has been called!')
+  System.debug(arguments.callee.name + ' has been called!')
   FS.readFile(opts.sketch_file, 'utf8', function (fs_err, sketch_body) {
     if ( fs_err ) {
       console.log('Error reading `' + opts.sketch_file + '`');
       throw fs_err;
     } else {
       if ( sketch_stat.constructor.name !== 'StatWatcher' ) {
-        //System.puts('This has to be done only once!');
+        System.debug('This has to be done only once!');
         sketch_stat = FS.watchFile(opts.sketch_file,
         { persistent: true, interval: 50 },
         function (curr, prev) {
-          curr.mtime === prev.mtime || Reader();
+
+          System.debug('CURR: '+System.inspect(curr));
+          System.debug('PREV: '+System.inspect(prev));
+
+          if ( curr.mtime.getTime() !== prev.mtime.getTime() ) { Reader(); }
           });
       }
 
@@ -184,6 +191,22 @@ function Reader() {
     }
   });
 }
+
+/*
+var Server = HTTP.createServer(function (request, response) {
+
+    console.log('Serving request ...');
+    // Check for ... How???
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.write(head, 'utf-8');
+    //console.log(System.inspect(script));
+    response.write(script, 'utf-8');
+    response.end(tail, 'utf-8');
+
+  });
+*/
+
+/* END FUNCTIONS */
 
 /* BEGIN EVENT HANDLERS */
 Events.on('parsedSketch', function () {
@@ -201,3 +224,5 @@ Events.on('loadedConfig', function (struct) {
 Config(sketch_skel); // This will take the input from Parser!
 
 Reader();
+
+// Server.listen(opt.server_port);

@@ -14,8 +14,8 @@
   {
     background(#000033);
     // get the width for the text
-    float twidth = textWidth(t);			
+    float twidth = textWidth(t);
     // place the text centered on the drawing area
-    text(t, (width - twidth)/2, height/2);	
+    text(t, (width - twidth)/2, height/2);
   }
-  
+
