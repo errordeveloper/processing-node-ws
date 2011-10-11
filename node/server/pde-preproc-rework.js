@@ -1,3 +1,5 @@
+/* BEGIN REQUIRE */
+
 var HTTP = require ('http'),
     DOM = require ('jsdom'),
     FS = require ('fs'),
@@ -41,6 +43,8 @@ var opts = require ('optimist')
 
   .usage('Usage: $0')
   .argv;
+
+/* END REQUIRE */
 
 /* BEGIN GLOBALS */
 var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
@@ -171,7 +175,7 @@ function Cacher(sketch_body) {
       Events.emit('parsedSketch');
     }
   });
-}
+} /* Cacher */
 
 function Reader() {
   System.debug(arguments.callee.name + ' has been called!')
@@ -183,20 +187,18 @@ function Reader() {
       if ( sketch_stat.constructor.name !== 'StatWatcher' ) {
         System.debug('This has to be done only once!');
         sketch_stat = FS.watchFile(opts.sketch_file,
-        { persistent: true, interval: 50 },
-        function (curr, prev) {
-
-          System.debug('CURR: '+System.inspect(curr));
-          System.debug('PREV: '+System.inspect(prev));
-
-          if ( curr.mtime.getTime() !== prev.mtime.getTime() ) { Reader(); }
-          });
+        { persistent: true, interval: 50 }, function (c, p) {
+          //System.debug('CURR: '+System.inspect(curr));
+          //System.debug('PREV: '+System.inspect(prev));
+          if ( c.mtime.getTime() !== p.mtime.getTime() )
+	    Reader();
+	  });
       }
 
       Cacher(sketch_body);
     }
   });
-}
+} /* Reader */
 
 /*
 var Server = HTTP.createServer(function (request, response) {
@@ -215,14 +217,15 @@ var Server = HTTP.createServer(function (request, response) {
 /* END FUNCTIONS */
 
 /* BEGIN EVENT HANDLERS */
+
 Events.on('parsedSketch', function () {
   console.log('Sketch parsed!');
   });
 
 
 Events.on('loadedConfig', function (struct) {
-  console.log(("head = \n" + struct.head));
-  console.log(("tail = \n" + struct.tail));
+  System.debug("head = \n" + struct.head);
+  System.debug("tail = \n" + struct.tail);
   });
 
 /* END EVENT HANDLERS */
