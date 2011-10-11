@@ -104,12 +104,15 @@ var sketch_stat = ''; // It's the easies way, but I don't see other way!
 
 /* BEGIN FUNCTIONS */
 
+var canvas_name = 'blank',
+    sketch_name = 'blank';
+
 function Config(conf) {
 
   System.debug(("conf = " + System.inspect(conf)));
 
-  var canvas_name = opts.canvas_name || conf.canvas_name,
-      sketch_name = opts.sketch_name || conf.sketch_name;
+  canvas_name = opts.canvas_name || conf.canvas_name,
+  sketch_name = opts.sketch_name || conf.sketch_name;
 
   var sketch_head = '<script type=\"application/processing\" '
                   + 'data-processing-target=\"'+canvas_name+'\">\n\n';
@@ -160,8 +163,11 @@ function Cacher(sketch_body) {
       // context already .. alternatives should be tested sometime :)
       script = window.Processing.compile(String(sketch_body)).sourceCode;
       var splice = script.split('\n');
-      script = 'var '+opts.sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
+      // In theory sketch_name may be still 'blank' here, however it should
+      // never happen since Cacher() normaly takes longer to excute then Conf()
+      script = 'var '+sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
       System.debug(script);
+      // Perhaps one may wish to place Linter() here also :)
       Events.emit('parsedSketch');
     }
   });
