@@ -49,6 +49,14 @@ var opts = require ('optimist')
 /* BEGIN GLOBALS */
 var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
 
+  /* Will be hardcode anyway, just have canvas_name here!
+  sketch_head : '<script type=\"application/processing\" '
+		  + 'data-processing-target=\"'+opts.canvas_name+'\">\n\n',
+		  */
+
+  canvas_name : 'myNewCanvas',
+  sketch_name : 'myNewSketch',
+
   /* TODO: These are Processing Java libraries! */
   sketch_libs: [],
   /* These are any JavaScript libraries you may need */
@@ -57,18 +65,13 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
     ],
 
   /* You probably won't need to redefine this! */
-  normal_head : '<!DOCTYPE html><html><head>',
-  normal_body: "<body>",
+  normal_head : '<!DOCTYPE html><html><head>'
+              + '<title>Processing Node</title>'
+              ,
+
+  normal_body: "</head><body>",
   normal_tail: "</body></html>",
   /* We may add change_{head,body,tail} too. */
-
-  /* Will be hardcode anyway, just have canvas_name here!
-  sketch_head : '<script type=\"application/processing\" '
-                  + 'data-processing-target=\"'+opts.canvas_name+'\">\n\n',
-                  */
-
-  canvas_name : 'myNewCanvas',
-  sketch_name : 'myNewSketch',
 
   /* One may wish to set this if they really want to use
    * CoffeeScript for example ... the also add it libs */
@@ -86,8 +89,10 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
                ,
 
   /* The canvas_name will need to be hardcoded also in here ;(*/
-  ammend_body : '<input type=\"textfield\" id=\"inputtext\"/>'
-               + '<button onclick=\"drawSomeText(\''+opts.canvas_name+'\')\"/>'
+  ammend_body : '<input type=\"text\" id=\"inputtext\"/>'//</input>'
+               + '<button onclick=\"drawSomeText(\''+opts.canvas_name+'\')\">'
+	       + '</button>'
+	       ,
 
 }; /* END OF PROTOTYPE OBJECT */
 
@@ -99,7 +104,7 @@ var pjs_library = 'http://processingjs.org/content/download/'
                 + 'processing-js-'+opts.pjs_version
                 + '/processing-'+opts.pjs_version+'.js';
 
-var pjs_include = '<script type=\"text/javascript\"'
+var pjs_include = '<script type=\"text/javascript\" '
                 + 'src=\"'+pjs_library+'\"></script>';
 
 var sketch_stat = ''; // It's the easies way, but I don't see other way!
@@ -132,7 +137,7 @@ function Config(conf) {
   head = conf.normal_head
        + pjs_include
        + lib_include
-       + conf.ammend_head
+       + ammend_head
        + conf.normal_body
        ;
 
@@ -200,19 +205,19 @@ function Reader() {
   });
 } /* Reader */
 
-/*
 var Server = HTTP.createServer(function (request, response) {
 
     console.log('Serving request ...');
-    // Check for ... How???
     response.writeHead(200, { 'Content-Type': 'text/html' });
+    System.debug(System.inspect(head));
+    // TODO: Wait for 'loadedConfig' ...
     response.write(head, 'utf-8');
+    // TODO: Wait for 'parsedSketch' ...
     //console.log(System.inspect(script));
-    response.write(script, 'utf-8');
+    //response.write(script, 'utf-8');
     response.end(tail, 'utf-8');
 
   });
-*/
 
 /* END FUNCTIONS */
 
@@ -234,4 +239,4 @@ Config(sketch_skel); // This will take the input from Parser!
 
 Reader();
 
-// Server.listen(opt.server_port);
+Server.listen(opts.server_port);
