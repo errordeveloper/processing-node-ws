@@ -74,33 +74,24 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
               + '<title>Processing Node</title>'
               ,
 
-  normal_body : "</head><body>",
-  normal_tail : "</body></html>",
-  /* We may add change_{head,body,tail} too. */
-
   /* One may wish to set this if they really want to use
-   * CoffeeScript for example ... the also add it libs */
+   * CoffeeScript for example and then also add its libs. */
   //script_head : '<script type=\"text/javascript\">\n<!--\n',
 
-  /* TODO: This proto object should have only empty strings
-   *       for ammend_head and ammend_body. */
+  normal_body : "</head><body>",
+  normal_tail : "</body></html>",
 
-  ammend_head : 'function drawSomeText(id) {'
-              + '  var pjs = Processing.getInstanceById(id);'
-              + '  var text = document.getElementById(\'inputtext\').value;'
-              + '  pjs.drawText(text);'
-              + '}\n-->\n</script>'
-              ,
-
-  /* If you are using something like this canvas_name needs to be
+  /* If you are using modify_head like this canvas_name needs to be
    * hardcoded also in here and DON'T USE `--canvas_name`! Instead
    * canvas_name needs to specified here in the config. */
   /* TODO: add a check for it, to ignore `--canvas_name` if
-   *       ammend_{body||head} are defined. */
-  ammend_body : '<input type=\"text\" id=\"inputtext\"/>'//</input>'
-              + '<button onclick=\"drawSomeText(\'myNewCanvas\')\">'
-	      + '</button>'
-	      ,
+   *       modify_{body||head} are defined. */
+  /* These need to be arrays of strings, because we want to be
+   * able to write multiline strings there! */
+  modify_head : [''],
+  modify_body : [''],
+
+  /* We may add change_{head,body,tail} too! */
 
 }; /* END OF PROTOTYPE OBJECT */
 
@@ -124,12 +115,12 @@ var pjs_include = '<script type=\"text/javascript\" '
 
 var sketch_stat = ''; // It's the easies way, but I don't see other way!
 
+var canvas_name = 'blank',
+    sketch_name = 'blank';
+
 /* END GLOBALS */
 
 /* BEGIN FUNCTIONS */
-
-var canvas_name = 'blank',
-    sketch_name = 'blank';
 
 function Config(conf) {
 
@@ -144,7 +135,7 @@ function Config(conf) {
   /* XXX: Is it needed really ?? */
   var script_head = '<script type=\"text/javascript\">\n<!--\n';
 
-  var ammend_head = script_head + conf.ammend_head;
+  var modify_head = conf.modify_head;
 
   /* TODO: Read conf.script_libs and put each here. */
   var lib_include = '';
@@ -152,7 +143,7 @@ function Config(conf) {
   head = conf.normal_head
        + pjs_include
        + lib_include
-       + ammend_head
+       + modify_head.join('\n')
        + conf.normal_body
        ;
 
@@ -163,7 +154,7 @@ function Config(conf) {
        + 'new Processing(document.getElementById(\''
        + canvas_name+'\'), '+sketch_name+');'
        + '\n-->\n</script>'
-       + conf.ammend_body
+       + conf.modify_body.join('\n')
        + conf.normal_tail
        ;
 
@@ -171,7 +162,9 @@ function Config(conf) {
   fake = head + sketch_head + tail;
   head += script_head;
 
-  Events.emit('loadedConfig', {head: head, tail: tail});
+  Events.emit('loadedConfig',
+      {head: head, tail: tail});
+  /* XXX: Perhaps, this is argument is redundant? */
 
 } /* Config */
 
@@ -221,8 +214,6 @@ function Reader() {
         System.debug('This has to be done only once!');
         sketch_stat = FS.watchFile(opts.sketch_file,
         { persistent: true, interval: 50 }, function (c, p) {
-          //System.debug('CURR: '+System.inspect(curr));
-          //System.debug('PREV: '+System.inspect(prev));
           if ( c.mtime.getTime() !== p.mtime.getTime() )
 	    Reader();
 	  });
@@ -236,7 +227,6 @@ function Reader() {
 var Server = HTTP.createServer(function (request, response) {
 
     console.log('Serving request ...');
-    //System.debug(System.inspect(head));
 
     var config_wait = 0;
     if ( loadedConfig === 0 ) {
@@ -283,7 +273,6 @@ Events.on('loadedConfig', function (struct) {
 /* END EVENT HANDLERS */
 
 Parser.async(opts.config_file, sketch_skel, Config);
-//Config(sketch_skel); // This will take the input from Parser!
 
 Reader();
 
