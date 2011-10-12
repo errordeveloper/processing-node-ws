@@ -5,6 +5,9 @@ var HTTP = require ('http'),
     FS = require ('fs'),
     EV = require ('events');
 
+var Uglify = require ('uglify-js');
+
+
 var System = require ('sys');
 
 var Parser = require ('./conf-parser.js');
@@ -102,7 +105,7 @@ var head = '', tail = '', fake = '';
 
 var pjs_library = 'http://processingjs.org/content/download/'
                 + 'processing-js-'+opts.pjs_version
-                + '/processing-'+opts.pjs_version+'.js';
+                + '/processing-'+opts.pjs_version+'.min.js';
 
 var pjs_include = '<script type=\"text/javascript\" '
                 + 'src=\"'+pjs_library+'\"></script>';
@@ -175,6 +178,15 @@ function Cacher(sketch_body) {
       // In theory sketch_name may be still 'blank' here, however it should
       // never happen since Cacher() normaly takes longer to excute then Conf()
       script = 'var '+sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
+
+      //console.log('Read:\n'+Dumper(script));
+      script = Uglify.parser.parse(String(script));
+      //console.log('Parsed:\n'+Dumper(script));
+      script = Uglify.uglify.ast_squeeze(script);
+      //console.log('Squeezed:\n'+Dumper(script));
+      script = Uglify.uglify.gen_code(script);
+      //console.log('Compressed:\n'+Dumper(script));
+
       System.debug(script);
       // Perhaps one may wish to place Linter() here also :)
       Events.emit('parsedSketch');
@@ -235,7 +247,8 @@ Events.on('loadedConfig', function (struct) {
 
 /* END EVENT HANDLERS */
 
-Config(sketch_skel); // This will take the input from Parser!
+Parser.async(opts.config_file, sketch_skel, Config);
+//Config(sketch_skel); // This will take the input from Parser!
 
 Reader();
 
