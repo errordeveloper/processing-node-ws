@@ -6,7 +6,6 @@ var HTTP = require ('http'),
     EV = require ('events');
 
 
-
 var System = require ('sys');
 
 var Parser = require ('./conf-parser.js');
@@ -75,8 +74,8 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
               + '<title>Processing Node</title>'
               ,
 
-  normal_body: "</head><body>",
-  normal_tail: "</body></html>",
+  normal_body : "</head><body>",
+  normal_tail : "</body></html>",
   /* We may add change_{head,body,tail} too. */
 
   /* One may wish to set this if they really want to use
@@ -86,25 +85,35 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
   /* TODO: This proto object should have only empty strings
    *       for ammend_head and ammend_body. */
 
-  /* Notice that inputtext is hardcoded here and in HTML too. */
-  ammend_head :  'function drawSomeText(id) {'
-               + '  var pjs = Processing.getInstanceById(id);'
-               + '  var text = document.getElementById(\'inputtext\').value;'
-               + '  pjs.drawText(text);'
-               + '}\n-->\n</script>'
-               ,
+  ammend_head : 'function drawSomeText(id) {'
+              + '  var pjs = Processing.getInstanceById(id);'
+              + '  var text = document.getElementById(\'inputtext\').value;'
+              + '  pjs.drawText(text);'
+              + '}\n-->\n</script>'
+              ,
 
-  /* The canvas_name will need to be hardcoded also in here ;(*/
+  /* If you are using something like this canvas_name needs to be
+   * hardcoded also in here and DON'T USE `--canvas_name`! Instead
+   * canvas_name needs to specified here in the config. */
+  /* TODO: add a check for it, to ignore `--canvas_name` if
+   *       ammend_{body||head} are defined. */
   ammend_body : '<input type=\"text\" id=\"inputtext\"/>'//</input>'
-               + '<button onclick=\"drawSomeText(\''+opts.canvas_name+'\')\">'
-	       + '</button>'
-	       ,
+              + '<button onclick=\"drawSomeText(\'myNewCanvas\')\">'
+	      + '</button>'
+	      ,
 
 }; /* END OF PROTOTYPE OBJECT */
 
+/* BEGIN EVENT COUNTERS */
+
+var loadedConfig = 0,
+    parsedSketch = 0;
+
+/* END EVENT COUNTERS */
+
 var head = '', tail = '', fake = '';
 
-// var script = '';
+var script = '';
 
 var pjs_library = 'http://processingjs.org/content/download/'
                 + 'processing-js-'+opts.pjs_version
@@ -167,7 +176,7 @@ function Config(conf) {
 } /* Config */
 
 function Squash(script) {
-  // Let's pretend it's really Lisp ;)
+  // (let me (pretend (it-is-real LISP))) ;)
   if(opts.pretty_test) { return script; }
   else { var Uglify = require ('uglify-js');
     return Uglify.uglify.gen_code(
@@ -227,14 +236,32 @@ function Reader() {
 var Server = HTTP.createServer(function (request, response) {
 
     console.log('Serving request ...');
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    System.debug(System.inspect(head));
-    // TODO: Wait for 'loadedConfig' ...
-    response.write(head, 'utf-8');
-    // TODO: Wait for 'parsedSketch' ...
-    //console.log(System.inspect(script));
-    //response.write(script, 'utf-8');
-    response.end(tail, 'utf-8');
+    //System.debug(System.inspect(head));
+
+    var config_wait = 0;
+    if ( loadedConfig === 0 ) {
+      config_wait = 10;
+      console.log('Will have to wait for loadedConfig!');
+    }
+
+    var script_wait = 0;
+    if ( parsedSketch === 0 ) {
+      script_wait = 10;
+      console.log('Will have to wait for parsedSketch!');
+    }
+
+    setTimeout(function () {
+      response.writeHead(200, { 'Content-Type': 'text/html' });
+      response.write(head, 'utf-8');
+
+      setTimeout(function () {
+        response.write(script, 'utf-8');
+        response.end(tail, 'utf-8');
+      }, script_wait);
+
+    }, config_wait);
+
+
 
   });
 
@@ -243,11 +270,12 @@ var Server = HTTP.createServer(function (request, response) {
 /* BEGIN EVENT HANDLERS */
 
 Events.on('parsedSketch', function () {
-  console.log('Sketch parsed!');
+  console.log('Sketch parsed! (' + ++parsedSketch + ')');
   });
 
 
 Events.on('loadedConfig', function (struct) {
+  console.log('Config loaded! (' + ++loadedConfig + ')');
   System.debug("head = \n" + struct.head);
   System.debug("tail = \n" + struct.tail);
   });
