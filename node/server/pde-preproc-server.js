@@ -230,13 +230,13 @@ var Server = HTTP.createServer(function (request, response) {
 
     var config_wait = 0;
     if ( loadedConfig === 0 ) {
-      config_wait = 10;
+      config_wait = 10000;
       console.log('Will have to wait for loadedConfig!');
     }
 
     var script_wait = 0;
     if ( parsedSketch === 0 ) {
-      script_wait = 10;
+      script_wait = 10000;
       console.log('Will have to wait for parsedSketch!');
     }
 
@@ -254,6 +254,11 @@ var Server = HTTP.createServer(function (request, response) {
 
 
   });
+
+function Testing() {
+        response.write(script, 'utf-8');
+        response.end(tail, 'utf-8');
+}
 
 /* END FUNCTIONS */
 
