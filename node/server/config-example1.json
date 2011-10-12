@@ -1,0 +1,28 @@
+{
+  "canvas_name": "ExampleCanvas",
+  "sketch_name": "ExampleSketch",
+
+  "script_libs": [ ],
+
+
+  "modify_head": [
+
+    "<script type='text/javascript'>",
+    "<!--",
+    "  function drawSomeText(id) {",
+    "  var pjs = Processing.getInstanceById(id);",
+    "  var text = document.getElementById('inputtext').value;",
+    "  pjs.drawText(text);}",
+    "-->",
+    "</script>"
+
+  ],
+
+  "modify_body": [
+
+    "<input type='text' id='inputtext'></input>",
+    "<button onclick=drawSomeText('ExampleCanvas')></button>"
+  ],
+
+  "test": "function (x) { x() };"
+}
