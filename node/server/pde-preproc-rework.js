@@ -5,7 +5,6 @@ var HTTP = require ('http'),
     FS = require ('fs'),
     EV = require ('events');
 
-var Uglify = require ('uglify-js');
 
 
 var System = require ('sys');
@@ -43,6 +42,10 @@ var opts = require ('optimist')
       { describe: 'version of Processing.js to use',
         alias: [ 'V' ],
         default: '1.3.0' })
+
+  .boolean('pretty_test',
+      { describe: 'do not compress the output script',
+        defualt: false})
 
   .usage('Usage: $0')
   .argv;
@@ -163,6 +166,16 @@ function Config(conf) {
 
 } /* Config */
 
+function Squash(script) {
+  // Let's pretend it's really Lisp ;)
+  if(opts.pretty_test) { return script; }
+  else { var Uglify = require ('uglify-js');
+    return Uglify.uglify.gen_code(
+      Uglify.uglify.ast_squeeze(
+        Uglify.parser.parse(
+          String(script)
+          ))); }
+} /* Squash */
 
 function Cacher(sketch_body) {
   System.debug(arguments.callee.name + ' has been called!')
@@ -179,13 +192,7 @@ function Cacher(sketch_body) {
       // never happen since Cacher() normaly takes longer to excute then Conf()
       script = 'var '+sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
 
-      //console.log('Read:\n'+Dumper(script));
-      script = Uglify.parser.parse(String(script));
-      //console.log('Parsed:\n'+Dumper(script));
-      script = Uglify.uglify.ast_squeeze(script);
-      //console.log('Squeezed:\n'+Dumper(script));
-      script = Uglify.uglify.gen_code(script);
-      //console.log('Compressed:\n'+Dumper(script));
+      script = Squash(script);
 
       System.debug(script);
       // Perhaps one may wish to place Linter() here also :)
