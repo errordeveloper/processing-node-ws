@@ -204,6 +204,8 @@ function Cacher(sketch_body) {
 } /* Cacher */
 
 function Reader() {
+  /* TODO: Implement a setTimeout work-around to deal with
+   *       the behaviour of vim when it re-writes the file. */
   System.debug(arguments.callee.name + ' has been called!')
   FS.readFile(opts.sketch_file, 'utf8', function (fs_err, sketch_body) {
     if ( fs_err ) {
