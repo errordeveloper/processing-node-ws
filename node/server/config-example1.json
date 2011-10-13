@@ -2,9 +2,6 @@
   "canvas_name": "ExampleCanvas",
   "sketch_name": "ExampleSketch",
 
-  "script_libs": [ ],
-
-
   "modify_head": [
 
     "<script type='text/javascript'>",
@@ -22,7 +19,6 @@
 
     "<input type='text' id='inputtext'></input>",
     "<button onclick=drawSomeText('ExampleCanvas')></button>"
-  ],
+  ]
 
-  "test": "function (x) { x() };"
 }

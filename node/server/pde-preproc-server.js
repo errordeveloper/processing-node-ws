@@ -68,7 +68,8 @@ var sketch_skel = { /* BEGIN PROTOTYPE OBJECT */
   sketch_libs: [],
   /* These are any JavaScript libraries you may need */
   script_libs: [
-    'http://haptic-data.com/toxiclibsjs/build/toxiclibs.js'
+    'http://haptic-data.com/toxiclibsjs/build/toxiclibs.js',
+    'http://sockjs.github.com/sockjs-client/sockjs-latest.min.js'
     ],
 
   /* You probably won't need to redefine this! */
@@ -139,8 +140,11 @@ function Config(conf) {
 
   var modify_head = conf.modify_head;
 
-  /* TODO: Read conf.script_libs and put each here. */
-  var lib_include = '';
+  var lib_include = '\n';
+  conf.script_libs.forEach(function (lib) {
+    if ( typeof (lib) === 'string' ) {
+      lib_include += '<script type=\"text/javascript\"'
+                  +  ' src=\"'+lib+'\"></script>\n';}});
 
   head = conf.normal_head
        + pjs_include
