@@ -8,6 +8,8 @@ var HTTP = require ('http'),
 
 var System = require ('sys');
 
+var Uglify = require ('uglify-js');
+
 var Parser = require ('./conf-parser.js');
 
 var Events = new EV.EventEmitter();
@@ -171,7 +173,7 @@ function Config(conf) {
 function Squash(script) {
   // (let me (pretend (it-is-real LISP))) ;)
   if(opts.pretty_test) { return script; }
-  else { var Uglify = require ('uglify-js');
+  else { // var Uglify = require ('uglify-js');
     return Uglify.uglify.gen_code(
       Uglify.uglify.ast_squeeze(
         Uglify.parser.parse(
@@ -186,18 +188,18 @@ function Cacher(sketch_body) {
       console.error("jsdom_err:\n" + System.inspect(dom_err));
       throw _err;
     } else {
-      // This is probably quicker this way, never mind we are in the
-      // context already .. alternatives should be tested sometime :)
       script = window.Processing.compile(String(sketch_body)).sourceCode;
       var splice = script.split('\n');
       // In theory sketch_name may be still 'blank' here, however it should
       // never happen since Cacher() normaly takes longer to excute then Conf()
+      /* TODO: do a check on `loadedConfig !=== 0`. */
       script = 'var '+sketch_name+' = ' +splice.slice(1,splice.length).join('\n');
 
       script = Squash(script);
 
       System.debug(script);
       // Perhaps one may wish to place Linter() here also :)
+      // XXX: pass 'script' with the event? What's so bad about it being a global?
       Events.emit('parsedSketch');
     }
   });
@@ -243,6 +245,18 @@ var Server = HTTP.createServer(function (request, response) {
     }
 
     setTimeout(function () {
+      /* We could put `Events.on('loadedConfig')` here, but
+       * but how to do it without addind too many lines?
+       * if (script_wait === 0) {
+       *   on('loadedConfig, do_this)
+       * } else {do_this(response)}
+       * function do_this(resp) {
+       *   resp.writeHead(200, header);
+       *   resp.write(head, 'utf-8');
+       * }
+       * Hence there is no way to pass the value with the
+       * event itself, cause the event is only used at the
+       * first run! Although it seems safer really ... */
       response.writeHead(200, { 'Content-Type': 'text/html' });
       response.write(head, 'utf-8');
 
