@@ -40,18 +40,101 @@
         <input id="input" autocomplete="off" class="box" align=top
                value="type something here" />
       </form>
-    <script>
+      <script type="application/processing" data-processing-target="ExampleCanvas">
 
-      var ExampleSketch=function($p){function setup(){$p.size(200,200),$p.noLoop(),$p.stroke(4294962824),$p.fill(4294962824),$p.background(4278190131),$p.text("",0,0),$p.textSize(24)}$p.setup=setup;function draw(){}$p.draw=draw;function drawText(t){$p.background(4278190131);var twidth=$p.textWidth(t);$p.text(t,($p.width-twidth)/2,$p.height/2)}$p.drawText=drawText}
+      // var ExampleSketch=function($p){function setup(){$p.size(200,200),$p.noLoop(),$p.stroke(4294962824),$p.fill(4294962824),$p.background(4278190131),$p.text("",0,0),$p.textSize(24)}$p.setup=setup;function draw(){}$p.draw=draw;function drawText(t){$p.background(4278190131);var twidth=$p.textWidth(t);$p.text(t,($p.width-twidth)/2,$p.height/2)}$p.drawText=drawText}
 
+    void setup(){
+      size(500, 250);
+      strokeWeight(2);
+      stroke(255);
+      noFill();
+    }
+
+    // Control Point Data
+    int[][] control = new int[4][2];
+    int[] ctrlSz = new int[4];
+    int controlSize = 10;
+    int n, thisN = -1, pushN;
+
+    for (n = 0; n < control.length; n ++){
+      control[n][0]=((width/2)/(control.length-1)*n)+(width/4);
+      ctrlSz[n] = controlSize;
+    }
+
+    control[0][1]=height/2; control[1][1]=50;
+    control[2][1]=50; control[3][1]=height/2;
+
+    // Control Points Colors
+    int[][] cCol = new int[4][4];
+    cCol[0]=[255,0,0,200]; cCol[1]=[255,255,0,200];
+    cCol[2]=[0,255,0,200]; cCol[3]=[0,100,255,200];
+
+    // Mouse Vars
+    int mouseDown = 0, dragging = -1, lastDragging = 0;
+
+    void draw(){
+      background(100);
+
+      noFill();
+      curveTightness(0.2);
+      beginShape();
+        curveVertex(-50,height/2);
+        curveVertex(0,height/2);
+        for (n = 0; n < control.length; n ++){
+        curveVertex(control[n][0], control[n][1]) ;}
+        curveVertex(width,height/2);
+        curveVertex(width+50,height/2);
+      endShape();
+
+      for (n = 0; n < control.length; n ++){
+        fill(cCol[n][0], cCol[n][1], cCol[n][2], cCol[n][3]);
+        rect(control[n][0] - ctrlSz[n] /2, control[n][1] - ctrlSz[n] /2,
+          ctrlSz[n], ctrlSz[n]);
+      }
+    }
+
+    void hoverDetect(){
+       pushN=-1;
+       for (n = 0; n < control.length; n ++){
+        if (mouseX > control[n][0] - controlSize *2
+            && mouseY > control[n][1] - controlSize *2
+            && mouseX < control[n][0] + controlSize *2
+            && mouseY < control[n][1] + controlSize *2){
+              pushN=n;
+              ctrlSz[n]= controlSize *2;
+        } else { ctrlSz[n]= controlSize; }
+      }
+      return pushN;
+    }
+
+    void mouseMoved(){ hoverDetect() }
+
+    void mousePressed(){
+      if (dragging==-1){
+        thisN = hoverDetect();
+        dragging=thisN;
+      }
+    }
+
+    void mouseReleased() { dragging = -1 }
+
+    void mouseDragged(){
+      if (dragging>-1){
+        control[dragging][0] = mouseX;
+        control[dragging][1] = mouseY;
+        sockjs.send("x="+mouseX+";"+"y="+mouseY+";");
+      }
+    }
     </script>
-    <script>
+
+    <!--<script>
 
       function drawSomeText(id, text) {
       var pjs = Processing.getInstanceById(id);
       pjs.drawText(text);}
 
-    </script>
+    </script> -->
     <script>
 
       var log;
@@ -86,9 +169,9 @@
     </script>
     <p>
     <canvas id="ExampleCanvas"></canvas>
-    <script>
+    <!--<script>
         new Processing(document.getElementById('ExampleCanvas'), ExampleSketch);
-    </script>
+      </script>-->
     </p>
     <div id="output" class="box small" />
     <script>
